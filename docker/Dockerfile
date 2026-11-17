@@ -28,4 +28,4 @@ ENV BACKEND_URL=http://localhost:3333
 EXPOSE 80
 
 # Replace backend URL and start Nginx
-CMD sed -i "s#http://localhost:3333#$BACKEND_URL#g" /usr/share/nginx/html/main.js && nginx -g 'daemon off;'
+CMD ["sh", "-c", "sed -i \"s|PLACEHOLDER_BACKEND_URL|${BACKEND_URL}|g\" /usr/share/nginx/html/assets/config.json && exec nginx -g 'daemon off;'"]
