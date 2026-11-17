@@ -1,32 +1,31 @@
-# Stage 1 - build environment
+
+# Stage 1 - Build environment
 FROM node:22-alpine AS build
 
 RUN apk add --no-cache python3 make g++ git
 
-# Create app directory
 WORKDIR /usr/src/app
-
-# Swtich to node user
-#RUN chown node:node ./
-#USER node
 
 COPY .npmrc ./
 COPY package*.json ./
 
-# Install app dependencies
-RUN npm ci 
+RUN npm ci
 
-# Copy all required files
 COPY . .
 
-# Build the application
 RUN npm run build:web
 
-# Stage 2 - the production environment
+# Stage 2 - Production environment
 FROM nginx:stable-alpine
 
-# Copy artifacts and nignx.conf
 COPY --from=build /usr/src/app/dist/browser /usr/share/nginx/html
 COPY --from=build /usr/src/app/docker/nginx.conf /etc/nginx/conf.d/default.conf
 
+# Default backend URL
+ENV BACKEND_URL=http://localhost:3333
+
+# Document the Nginx port
+EXPOSE 80
+
+# Replace backend URL and start Nginx
 CMD sed -i "s#http://localhost:3333#$BACKEND_URL#g" /usr/share/nginx/html/main.js && nginx -g 'daemon off;'
