@@ -24,4 +24,4 @@ COPY --from=build /usr/src/app/docker/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 
 # Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "if [ -z \"$BACKEND_URL\" ]; then echo 'ERROR: BACKEND_URL is not configured'; exit 1; fi; sed -i \"s|PLACEHOLDER_BACKEND_URL|${BACKEND_URL}|g\" /usr/share/nginx/html/assets/config.json && exec nginx -g 'daemon off;'"]
