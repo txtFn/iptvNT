@@ -21,11 +21,7 @@ FROM nginx:stable-alpine
 COPY --from=build /usr/src/app/dist/browser /usr/share/nginx/html
 COPY --from=build /usr/src/app/docker/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Default backend URL
-ENV BACKEND_URL=http://localhost:3333
-
-# Document the Nginx port
 EXPOSE 80
 
-# Replace backend URL and start Nginx
-CMD sed -i "s#http://localhost:3333#$BACKEND_URL#g" /usr/share/nginx/html/main.js && nginx -g 'daemon off;'
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
