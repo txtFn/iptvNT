@@ -1,32 +1,32 @@
-# Stage 1 - build environment
+
+# Stage 1 - Build environment
 FROM node:22-alpine AS build
 
 RUN apk add --no-cache python3 make g++ git
 
-# Create app directory
 WORKDIR /usr/src/app
-
-# Swtich to node user
-#RUN chown node:node ./
-#USER node
 
 COPY .npmrc ./
 COPY package*.json ./
 
-# Install app dependencies
-RUN npm ci 
+RUN npm ci
 
-# Copy all required files
 COPY . .
 
-# Build the application
+# Build iptvNT
 RUN npm run build:web
 
-# Stage 2 - the production environment
+# Stage 2 - Production environment
 FROM nginx:stable-alpine
 
-# Copy artifacts and nignx.conf
+# Copy compiled frontend
 COPY --from=build /usr/src/app/dist/browser /usr/share/nginx/html
+
+# Copy Nginx configuration
 COPY --from=build /usr/src/app/docker/nginx.conf /etc/nginx/conf.d/default.conf
 
-CMD sed -i "s#http://localhost:3333#$BACKEND_URL#g" /usr/share/nginx/html/main.js && nginx -g 'daemon off;'
+# Nginx listens on port 80
+EXPOSE 80
+
+# Configure backend URL when container starts
+CMD ["sh", "-c", "if [ -z \"$BACKEND_URL\" ]; then echo 'ERROR: BACKEND_URL is not configured'; exit 1; fi; sed -i \"s|PLACEHOLDER_BACKEND_URL|${BACKEND_URL}|g\" /usr/share/nginx/html/assets/config.json && exec nginx -g 'daemon off;'"]
